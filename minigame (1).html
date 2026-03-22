@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🍑 Oupsi…</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables & reset ── */
+    :root {
+      --bg:        #0d0d0f;
+      --surface:   #1a1a1f;
+      --accent:    #ff6b6b;
+      --accent2:   #ffd60a;
+      --penalty:   #ff3a3a;
+      --muted:     #444455;
+      --text:      #f0f0f5;
+      --text-dim:  #888899;
+      --radius:    18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 20px 32px;
+      overflow-x: hidden;
+      /* grain texture */
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      width: 100%;
+    }
+
+    header h1 {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(1.6rem, 6vw, 2.2rem);
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    header p.sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* ── Score card ── */
+    .score-card {
+      background: var(--surface);
+      border: 1px solid #2a2a35;
+      border-radius: var(--radius);
+      padding: 20px 32px;
+      text-align: center;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .score-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    #scoreDisplay {
+      font-family: 'Fredoka One', cursive;
+      font-size: clamp(2.8rem, 12vw, 4rem);
+      line-height: 1;
+      transition: transform 0.12s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    #scoreDisplay.pop {
+      transform: scale(1.25);
+    }
+
+    /* ── Combo & message ── */
+    .feedback-zone {
+      height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    #comboText {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.3rem;
+      color: var(--accent2);
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #comboText.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #msgText {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      min-height: 18px;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ── Main button ── */
+    .btn-main {
+      background: linear-gradient(145deg, #ff6b6b, #e63950);
+      border: none;
+      border-radius: 50%;
+      width: clamp(140px, 42vw, 180px);
+      height: clamp(140px, 42vw, 180px);
+      font-size: clamp(3rem, 12vw, 4.5rem);
+      cursor: pointer;
+      box-shadow:
+        0 0 0 0 rgba(255, 107, 107, 0.4),
+        0 10px 40px rgba(255, 107, 107, 0.25);
+      animation: pulse-idle 2.5s ease-in-out infinite;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .btn-main:active {
+      transform: scale(0.91);
+      box-shadow: 0 4px 16px rgba(255, 107, 107, 0.2);
+      animation: none;
+    }
+
+    @keyframes pulse-idle {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.4), 0 10px 40px rgba(255,107,107,0.25); }
+      50%       { box-shadow: 0 0 0 14px rgba(255,107,107,0), 0 10px 40px rgba(255,107,107,0.35); }
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .stat-pill {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid #2a2a35;
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: center;
+    }
+
+    .stat-pill .label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dim);
+    }
+
+    .stat-pill .value {
+      font-family: 'Fredoka One', cursive;
+      font-size: 1.4rem;
+    }
+
+    #penaltyCount { color: var(--penalty); }
+    #comboCount   { color: var(--accent2); }
+
+    /* ── Penalty button ── */
+    .btn-penalty {
+      background: transparent;
+      border: 2px solid #3a2a2a;
+      color: #cc4444;
+      border-radius: 14px;
+      padding: 14px 28px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 360px;
+      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+      touch-action: manipulation;
+    }
+
+    .btn-penalty:active {
+      transform: scale(0.97);
+      background: #1f1010;
+      border-color: var(--penalty);
+    }
+
+    /* Shake animation on penalty */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      15%      { transform: translateX(-8px); }
+      30%      { transform: translateX(8px); }
+      45%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+      75%      { transform: translateX(-3px); }
+      90%      { transform: translateX(3px); }
+    }
+
+    body.flash-red::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: rgba(255, 40, 40, 0.12);
+      pointer-events: none;
+      animation: fadeFlash 0.35s ease forwards;
+    }
+
+    @keyframes fadeFlash {
+      0%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* ── Reset button ── */
+    .btn-reset {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+
+    .btn-reset:hover { color: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+  <!-- En-tête -->
+  <header>
+    <h1>🍑 Oupsi…</h1>
+    <p class="sub">Clique vite, combo haut, pénalités zéro</p>
+  </header>
+
+  <!-- Score principal -->
+  <div class="score-card">
+    <div class="score-label">Compteur</div>
+    <div id="scoreDisplay">🍑 ×0</div>
+  </div>
+
+  <!-- Zone feedback combo + message -->
+  <div class="feedback-zone">
+    <div id="comboText"></div>
+    <div id="msgText"></div>
+  </div>
+
+  <!-- Bouton principal -->
+  <button class="btn-main" id="mainBtn" aria-label="Ajouter des points">🍑</button>
+
+  <!-- Stats pénalités / meilleur combo -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="label">Pénalités</div>
+      <div class="value" id="penaltyCount">0</div>
+    </div>
+    <div class="stat-pill">
+      <div class="label">Best combo</div>
+      <div class="value" id="comboCount">0</div>
+    </div>
+  </div>
+
+  <!-- Bouton pénalité -->
+  <button class="btn-penalty" id="penaltyBtn">🚫 Oups, erreur ! (+5 🍑)</button>
+
+  <!-- Reset -->
+  <button class="btn-reset" id="resetBtn">↺ Tout remettre à zéro</button>
+
+  <script>
+    // ── État du jeu ──────────────────────────────────────────────────────────
+    let score      = 0;
+    let combo      = 1;
+    let bestCombo  = 0;
+    let penalties  = 0;
+    let lastClick  = 0;
+    let comboTimer = null;   // pour reset du combo après inactivité
+    let msgTimer   = null;   // pour effacer les messages
+
+    const COMBO_WINDOW  = 1000;  // ms entre deux clics pour maintenir le combo
+    const PENALTY_VALUE = 5;     // points retirés par pénalité
+
+    // Messages aléatoires selon le niveau de combo
+    const COMBO_MSGS = {
+      low:  ["😏 Continue comme ça…", "👌 Bien joué", "🍑 Encore !"],
+      mid:  ["🔥 Chaud devant !", "💥 Bien enchaîné !", "⚡ T'es en feu !"],
+      high: ["🚀 Incroyable !", "😤 Combo légendaire !", "👑 Trop fort(e) !", "💫 Intouchable !"]
+    };
+
+    const PENALTY_MSGS = [
+      "😏 Zone interdite...",
+      "🚫 Pas là…",
+      "👀 Tu testes les limites",
+      "⚠️ Attention...",
+      "😈 Oups… volontaire ?",
+      "🔥 Ça dérape un peu",
+      "🍑 Bonus inattendu"
+    ];
+
+    // ── Refs DOM ─────────────────────────────────────────────────────────────
+    const scoreEl    = document.getElementById("scoreDisplay");
+    const comboEl    = document.getElementById("comboText");
+    const msgEl      = document.getElementById("msgText");
+    const penaltyCnt = document.getElementById("penaltyCount");
+    const comboCnt   = document.getElementById("comboCount");
+
+    // ── localStorage : chargement ────────────────────────────────────────────
+    function loadState() {
+      score     = parseInt(localStorage.getItem("gc_score")     || "0");
+      penalties = parseInt(localStorage.getItem("gc_penalties") || "0");
+      bestCombo = parseInt(localStorage.getItem("gc_bestCombo") || "0");
+      renderScore();
+      penaltyCnt.textContent = penalties;
+      comboCnt.textContent   = bestCombo;
+    }
+
+    // ── localStorage : sauvegarde ────────────────────────────────────────────
+    function saveState() {
+      localStorage.setItem("gc_score",     score);
+      localStorage.setItem("gc_penalties", penalties);
+      localStorage.setItem("gc_bestCombo", bestCombo);
+    }
+
+    // ── Rendu score ──────────────────────────────────────────────────────────
+    function renderScore() {
+      scoreEl.textContent = `🍑 ×${score}`;
+    }
+
+    // ── Effet pop sur le score ───────────────────────────────────────────────
+    function popScore() {
+      scoreEl.classList.remove("pop");
+      void scoreEl.offsetWidth; // force reflow
+      scoreEl.classList.add("pop");
+      setTimeout(() => scoreEl.classList.remove("pop"), 130);
+    }
+
+    // ── Message temporaire ───────────────────────────────────────────────────
+    function showMsg(text, duration = 1400) {
+      clearTimeout(msgTimer);
+      msgEl.textContent = text;
+      msgTimer = setTimeout(() => { msgEl.textContent = ""; }, duration);
+    }
+
+    // ── Milestones ───────────────────────────────────────────────────────────
+    function checkMilestones() {
+      if (score === 10) showMsg("🔥 Ça chauffe !");
+      if (score === 25) showMsg("😏 Ça devient sérieux");
+      if (score === 50) showMsg("⚡ Niveau supérieur !");
+      if (score === 100) showMsg("👑 Centenaire 🍑");
+    }
+
+    // ── Clic principal ───────────────────────────────────────────────────────
+    document.getElementById("mainBtn").addEventListener("click", () => {
+      const now = Date.now();
+
+      // Maintien ou reset du combo
+      if (now - lastClick < COMBO_WINDOW) {
+        combo++;
+      } else {
+        combo = 1;
+      }
+      lastClick = now;
+
+      // Reset du timer de fin de combo
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(() => {
+        combo = 1;
+        comboEl.classList.remove("visible");
+      }, COMBO_WINDOW);
+
+      // Calcul gain
+      const gain = combo;
+      score += gain;
+
+      // Mise à jour best combo
+      if (combo > bestCombo) {
+        bestCombo = combo;
+        comboCnt.textContent = bestCombo;
+      }
+
+      // Affichage combo si > 1
+      if (combo > 1) {
+        comboEl.textContent = `Combo ×${combo} 🔥`;
+        comboEl.classList.add("visible");
+
+        // Message aléatoire selon niveau de combo
+        const pool = combo >= 10 ? COMBO_MSGS.high
+                   : combo >= 5  ? COMBO_MSGS.mid
+                   :               COMBO_MSGS.low;
+        if (combo % 3 === 0) {
+          showMsg(pool[Math.floor(Math.random() * pool.length)]);
+        }
+      } else {
+        comboEl.classList.remove("visible");
+      }
+
+      renderScore();
+      checkMilestones();
+      popScore();
+      saveState();
+
+      // Vibration mobile (si dispo)
+      if (navigator.vibrate) navigator.vibrate(combo > 5 ? 30 : 10);
+    });
+
+    // ── Bouton pénalité ──────────────────────────────────────────────────────
+    document.getElementById("penaltyBtn").addEventListener("click", () => {
+      // Ajouter des points (pénalité = bonus 🍑)
+      score += PENALTY_VALUE;
+      penalties++;
+
+      // Casser le combo
+      combo = 1;
+      clearTimeout(comboTimer);
+      comboEl.classList.remove("visible");
+
+      // Mise à jour UI
+      renderScore();
+      checkMilestones();
+      penaltyCnt.textContent = penalties;
+
+      // Message pénalité
+      const msg = PENALTY_MSGS[Math.floor(Math.random() * PENALTY_MSGS.length)];
+      showMsg(msg, 1800);
+
+      // Flash rouge + shake score
+      document.body.classList.remove("flash-red");
+      void document.body.offsetWidth;
+      document.body.classList.add("flash-red");
+      setTimeout(() => document.body.classList.remove("flash-red"), 400);
+
+      scoreEl.style.animation = "shake 0.4s ease";
+      setTimeout(() => { scoreEl.style.animation = ""; }, 420);
+
+      saveState();
+
+      // Vibration longue pour indiquer la faute
+      if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+    });
+
+    // ── Reset total ──────────────────────────────────────────────────────────
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      score = 0; combo = 1; penalties = 0; bestCombo = 0;
+      lastClick = 0;
+      clearTimeout(comboTimer);
+      clearTimeout(msgTimer);
+      renderScore();
+      penaltyCnt.textContent  = "0";
+      comboCnt.textContent    = "0";
+      comboEl.classList.remove("visible");
+      msgEl.textContent = "";
+      saveState();
+    });
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadState();
+  </script>
+</body>
+</html>
